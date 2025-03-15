@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GDS Code Interpreter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f4f4f4;
+            border: 1px solid #ccc;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>GDS Code Interpreter</h1>
+    <textarea id="codeInput" placeholder="Введите ваш код здесь..."></textarea>
+    <button onclick="processCode()">Запустить код</button>
+    <div class="output" id="output"></div>
+
+    <script>
+        let ints = 0;
+        let intsa = 0;
+        let stringis = {};
+        let strkey = 0;
+        let stringisis = 0;
+        let dscbint = 0;
+        let ifs = 0;
+        let ends = 0;
+        let codeStart = "false";
+        let codeEnd = "true";
+        let table = {};
+        let repeatf = "false";
+
+        function processLine(line) {
+            if (line.includes("start")) {
+                codeStart = "true";
+            }
+
+            if (codeStart === "true") {
+                if (line.includes("dscb")) {
+                    const dscbMatch = line.match(/dscb\{(.*?)\}/);
+                    if (dscbMatch) {
+                        const dscbstr = dscbMatch[1];
+                        logOutput(dscbstr);
+                    }
+
+                    const dscbintMatch = line.match(/,\<(.*?)\>/);
+                    if (dscbintMatch) {
+                        dscbint = dscbintMatch[1];
+                        logOutput(dscbint);
+                    }
+
+                    logOutput(stringis[4]);
+                    logOutput(stringis[dscbint]);
+                }
+
+                // переменные
+                if (line.includes("int")) {
+                    const intMatch = line.match(/int\s*=\s*\{(.*?)\}/);
+                    if (intMatch) {
+                        ints = parseInt(intMatch[1]);
+                        logOutput("base/number/gandonScript: " + ints);
+                    }
+
+                    const intsaMatch = line.match(/,\[(.*?)\]/);
+                    if (intsaMatch) {
+                        intsa = parseInt(intsaMatch[1]);
+                        table[intsa] = ints;
+                    }
+                }
+
+                // сложение
+                if (line.includes("math.sum")) {
+                    const sumMatch = line.match(/math\.sum\{(.*?)\}/);
+                    if (sumMatch) {
+                        const operand1 = parseInt(sumMatch[1]);
+                        const operand2Match = line.match(/,\[(.*?)\]/);
+                        if (operand2Match) {
+                            const operand2 = parseInt(operand2Match[1]);
+                            logOutput(operand1 + operand2);
+                            const intsaMatch = line.match(/,\<(.*?)\>/);
+                            if (intsaMatch) {
+                                intsa = parseInt(intsaMatch[1]);
+                                table[intsa] = operand1 + operand2;
+                            }
+                        }
+                    }
+                }
+
+                // вычитание
+                if (line.includes("math.sub")) {
+                    const subMatch = line.match(/math\.sub\{(.*?)\}/);
+                    if (subMatch) {
+                        const operand1 = parseInt(subMatch[1]);
+                        const operand2Match = line.match(/,\[(.*?)\]/);
+                        if (operand2Match) {
+                            const operand2 = parseInt(operand2Match[1]);
+                            logOutput(operand1 - operand2);
+                            const intsaMatch = line.match(/,\<(.*?)\>/);
+                            if (intsaMatch) {
+                                intsa = parseInt(intsaMatch[1]);
+                                table[intsa] = operand1 - operand2;
+                            }
+                        }
+                    }
+                }
+
+                // умножение
+                if (line.includes("math.mul")) {
+                    const mulMatch = line.match(/math\.mul\{(.*?)\}/);
+                    if (mulMatch) {
+                        const operand1 = parseInt(mulMatch[1]);
+                        const operand2Match = line.match(/,\[(.*?)\]/);
+                        if (operand2Match) {
+                            const operand2 = parseInt(operand2Match[1]);
+                            logOutput(operand1 * operand2);
+                            const intsaMatch = line.match(/,\<(.*?)\>/);
+                            if (intsaMatch) {
+                                intsa = parseInt(intsaMatch[1]);
+                                table[intsa] = operand1 * operand2;
+                            }
+                        }
+                    }
+                }
+
+                // вывод чисел
+                if (line.includes("dscb.int")) {
+                    const dscbIntMatch = line.match(/dscb\.int\{(.*?)\}/);
+                    if (dscbIntMatch) {
+                        intsa = parseInt(dscbIntMatch[1]);
+                        logOutput(table[intsa]);
+                    }
+                }
+
+                // строки
+                if (line.includes("string")) {
+                    const stringMatch = line.match(/string\{(.*?)\}/);
+                    if (stringMatch) {
+                        stringisis = stringMatch[1];
+                        logOutput("base/string/gandonScript: " + stringisis);
+                        const strkeyMatch = line.match(/,\<(.*?)\>/);
+                        if (strkeyMatch) {
+                            strkey = strkeyMatch[1];
+                            stringis[strkey] = stringisis;
+                        }
+                    }
+                }
+
+                // деление
+                if (line.includes("math.div")) {
+                    const divMatch = line.match(/math\.div\{(.*?)\}/);
+                    if (divMatch) {
+                        const operand1 = parseInt(divMatch[1]);
+                        const operand2Match = line.match(/,\[(.*?)\]/);
+                        if (operand2Match) {
+                            const operand2 = parseInt(operand2Match[1]);
+                            logOutput(operand1 / operand2);
+                            const intsaMatch = line.match(/,\<(.*?)\>/);
+                            if (intsaMatch) {
+                                intsa = parseInt(intsaMatch[1]);
+                                table[intsa] = operand1 / operand2;
+                            }
+                        }
+                    }
+                }
+
+                // очистка консоли
+                if (line.includes("cons.cl")) {
+                    clearOutput();
+                }
+
+                // условие если
+                if (line.includes("end")) {
+                    ends++;
+                    logOutput(ends);
+                }
+
+                if (line.includes("if")) {
+                    ifs++;
+                    logOutput(ifs);
+                    setTimeout(() => {}, 10); // Задержка в 10 мс
+                }
+
+                if (ends !== ifs) {
+                    logOutput("error: no if end in a code");
+                }
+
+                // цикл
+                if (line.includes("loop.it")) {
+                    repeatf = "true";
+                }
+
+                // завершение программы
+                if (line.includes("pr.stop")) {
+                    logOutput("program stopped!");
+                    return;
+                }
+            }
+        }
+
+        function processCode() {
+            const code = document.getElementById("codeInput").value;
+            const lines = code.split(/\r?\n/);
+            clearOutput();
+
+            lines.forEach(line => {
+                processLine(line);
+            });
+        }
+
+        function logOutput(message) {
+            const outputDiv = document.getElementById("output");
+            outputDiv.textContent += message + "\n";
+        }
+
+        function clearOutput() {
+            const outputDiv = document.getElementById("output");
+            outputDiv.textContent = "";
+        }
+    </script>
+</body>
+</html>
